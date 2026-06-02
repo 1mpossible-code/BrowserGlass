@@ -17,9 +17,9 @@
     }
   ],
   "web_accessible_resources": [
-      {
-        "resources": ["src/injected.js"],
-        "matches": ["<all_urls>"]
-      }
+    {
+      "resources": ["src/inject.js"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }

@@ -1,6 +1,10 @@
 console.log("[BrowserGlass] injected script loaded");
-window.postMessage({
-    source: "BrowserGlass",
-    type: "injected_ready",
-    timestamp: Date.now()
-}, "*")
+if (!window.__BROWSERGLASS_INJECTED__) {
+    window.__BROWSERGLASS_INJECTED__ = true;
+
+    window.postMessage({
+        source: "BrowserGlass",
+        type: "injected_ready",
+        timestamp: Date.now()
+    }, "*")
+}
