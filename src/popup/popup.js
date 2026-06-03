@@ -1,10 +1,41 @@
-const domain = document.getElementById("domain");
+const status = document.getElementById("status");
 
-async function showCurrentDomain() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const url = tab?.url ? new URL(tab.url) : null;
+const getActiveTab = async () => {
+  const tabs = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
 
-  domain.textContent = url?.hostname ?? "No domain";
-}
+  return tabs[0];
+};
 
-showCurrentDomain();
+const getEventsForTab = async (tabId) => {
+  return await chrome.runtime.sendMessage({
+    type: "get_events_for_tab",
+    tabId,
+  });
+};
+
+const renderStatus = (events) => {
+  const cpuEvent = events.find(
+    (event) => event.api === "navigator.hardwareConcurrency"
+  );
+
+  status.textContent = cpuEvent
+    ? "CPU core count read"
+    : "No browser inspection detected yet.";
+};
+
+const init = async () => {
+  const tab = await getActiveTab();
+
+  if (!tab?.id) {
+    renderStatus([]);
+    return;
+  }
+
+  const response = await getEventsForTab(tab.id);
+  renderStatus(response?.events || []);
+};
+
+init();

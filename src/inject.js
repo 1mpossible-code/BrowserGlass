@@ -1,10 +1,39 @@
-console.log("[BrowserGlass] injected script loaded");
-if (!window.__BROWSERGLASS_INJECTED__) {
-    window.__BROWSERGLASS_INJECTED__ = true;
+const emitBrowserGlassEvent = (event) => {
+  window.postMessage(
+    {
+      source: "BrowserGlass",
+      timestamp: Date.now(),
+      ...event,
+    },
+    "*"
+  );
+};
 
-    window.postMessage({
-        source: "BrowserGlass",
-        type: "injected_ready",
-        timestamp: Date.now()
-    }, "*")
+if (!window.__BROWSERGLASS_PATCHES__) {
+  window.__BROWSERGLASS_PATCHES__ = {};
+}
+
+if (!window.__BROWSERGLASS_PATCHES__.hardwareConcurrency) {
+  window.__BROWSERGLASS_PATCHES__.hardwareConcurrency = true;
+
+  const descriptor = Object.getOwnPropertyDescriptor(
+    Navigator.prototype,
+    "hardwareConcurrency"
+  );
+
+  if (descriptor && typeof descriptor.get === "function") {
+    Object.defineProperty(Navigator.prototype, "hardwareConcurrency", {
+      get() {
+        emitBrowserGlassEvent({
+          type: "fingerprint_signal",
+          api: "navigator.hardwareConcurrency",
+          label: "CPU core count read",
+          risk: "medium",
+        });
+
+        return descriptor.get.call(this);
+      },
+      configurable: true,
+    });
+  }
 }

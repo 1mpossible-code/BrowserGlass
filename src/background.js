@@ -1,9 +1,20 @@
-chrome.runtime.onMessage.addListener((message, sender) => {
-    if (message.type != "page_event") return;
+const eventsByTab = new Map();
 
-    console.log("[BrowserGlass] background received:", {
-        tabId: sender.tab?.id,
-        url: sender.tab?.url,
-        payload: message.payload
-    })
-})
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "page_event") {
+    const tabId = sender.tab?.id;
+    if (typeof tabId !== "number") return;
+
+    const existing = eventsByTab.get(tabId) || [];
+
+    eventsByTab.set(tabId, [message.payload, ...existing].slice(0, 100));
+    return;
+  }
+
+  if (message.type === "get_events_for_tab") {
+    const tabId = message.tabId;
+    sendResponse({
+      events: eventsByTab.get(tabId) || [],
+    });
+  }
+});
